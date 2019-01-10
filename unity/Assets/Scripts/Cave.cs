@@ -49,8 +49,7 @@ public class Cave : MonoBehaviour
         if (walking)
         {
             var delta = transform.TransformPoint(baseDelta);
-            var startPosition = Vector2Int.zero;
-            walker.Setup(delta, startPosition);
+            walker.Setup(delta, new Vector2Int(size.x / 2, size.y / 2));
         }
         btnStart.interactable = btnReset.interactable = !walking;
         btnWalk.GetComponentInChildren<Text>().text = (walking ? "Exit" : "Walk");
