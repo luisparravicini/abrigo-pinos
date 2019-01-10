@@ -19,12 +19,10 @@ public class Cave : MonoBehaviour
     public Button btnWalk;
     public Movement walker;
     public GameObject mainCam;
-    public Text compass;
     Coroutine generator;
     YieldInstruction stepWait;
     GameObject[,] blocks;
     bool walking;
-    MazeSpec maze;
     Vector3 baseDelta;
 
     private void Start()
@@ -47,13 +45,12 @@ public class Cave : MonoBehaviour
     public void OnBtnWalk()
     {
         walking = !walking;
-        compass.gameObject.SetActive(walking);
 
         if (walking)
         {
             var delta = transform.TransformPoint(baseDelta);
             var startPosition = Vector2Int.zero;
-            walker.Setup(delta, startPosition, maze, Direction.N, compass);
+            walker.Setup(delta, startPosition);
         }
         btnStart.interactable = btnReset.interactable = !walking;
         btnWalk.GetComponentInChildren<Text>().text = (walking ? "Exit" : "Walk");
@@ -69,7 +66,6 @@ public class Cave : MonoBehaviour
 
     private void Reset()
     {
-        compass.gameObject.SetActive(false);
         btnWalk.interactable = false;
 
         if (generator != null)
@@ -135,7 +131,6 @@ public class Cave : MonoBehaviour
             yield return stepWait;
         }
 
-        maze = automata.Maze;
         generator = null;
         btnWalk.interactable = true;
         btnStart.interactable = true;

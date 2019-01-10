@@ -9,7 +9,6 @@ public class CellularAutomataCaves
     int horizontalBlankingWidth;
     int maxIterationsForR2Cutoff;
     int iterations;
-    public MazeSpec Maze { get; private set; }
     public bool[,] data { get; private set; }
     bool[,] newData;
 
@@ -24,8 +23,6 @@ public class CellularAutomataCaves
 
     public void Start()
     {
-        Maze = new MazeSpec(size);
-
         data = new bool[size.x, size.y];
         newData = new bool[size.x, size.y];
         for (var y = 0; y < size.y; y++)
