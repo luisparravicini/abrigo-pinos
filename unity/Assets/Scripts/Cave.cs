@@ -1,0 +1,141 @@
+﻿using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
+
+
+public class Cave : MonoBehaviour
+{
+    public Vector2Int size;
+    public float stepTime;
+    public int iterations;
+    public float rockProbability;
+    public GameObject rockPrefab;
+    public GameObject floorPrefab;
+    public Button btnStart;
+    public Button btnReset;
+    public Button btnWalk;
+    public Movement walker;
+    public GameObject mainCam;
+    public Text compass;
+    Coroutine generator;
+    YieldInstruction stepWait;
+    GameObject[,] blocks;
+    bool walking;
+    MazeSpec maze;
+    Vector3 baseDelta;
+
+    private void Start()
+    {
+        Reset();
+    }
+
+    public void OnBtnStart()
+    {
+        btnStart.interactable = false;
+        Generate();
+    }
+
+    public void OnBtnReset()
+    {
+        btnStart.interactable = true;
+        Reset();
+    }
+
+    public void OnBtnWalk()
+    {
+        walking = !walking;
+        compass.gameObject.SetActive(walking);
+
+        if (walking)
+        {
+            var delta = transform.TransformPoint(baseDelta);
+            var startPosition = Vector2Int.zero;
+            walker.Setup(delta, startPosition, maze, Direction.N, compass);
+        }
+        btnStart.interactable = btnReset.interactable = !walking;
+        btnWalk.GetComponentInChildren<Text>().text = (walking ? "Exit" : "Walk");
+
+        walker.gameObject.SetActive(walking);
+        mainCam.SetActive(!walking);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireCube(transform.position, new Vector3(size.x, 1, size.y));
+    }
+
+    private void Reset()
+    {
+        compass.gameObject.SetActive(false);
+        btnWalk.interactable = false;
+
+        if (generator != null)
+        {
+            StopCoroutine(generator);
+            generator = null;
+        }
+
+        foreach (Transform child in transform)
+            Destroy(child.gameObject);
+
+        blocks = new GameObject[size.x, size.y];
+        baseDelta = new Vector3(-size.x / 2 + 0.5f, 0, -size.y / 2 + 0.5f);
+        CreateUI();
+    }
+
+    public void Generate()
+    {
+        Reset();
+        stepWait = new WaitForSeconds(stepTime);
+        generator = StartCoroutine(GenerateSteps());
+    }
+
+    void CreateUI()
+    {
+        var pos = baseDelta + new Vector3(size.x / 2, 0, size.y / 2);
+        var floor = Instantiate(floorPrefab, pos, floorPrefab.transform.rotation);
+        floor.transform.localScale = new Vector3(size.x, size.y, 0);
+        floor.transform.SetParent(transform, false);
+
+        for (var y = 0; y < size.y; y++)
+            for (var x = 0; x < size.x; x++)
+            {
+                pos = baseDelta + new Vector3(x, 0, y);
+                var block = Instantiate(rockPrefab, pos, rockPrefab.transform.rotation);
+                block.transform.SetParent(transform, false);
+                blocks[x, y] = block;
+            }
+    }
+
+    void Redraw(bool[,] data)
+    {
+        for (var y = 0; y < size.y; y++)
+            for (var x = 0; x < size.x; x++)
+                blocks[x, y].SetActive(data[x, y]);
+    }
+
+    IEnumerator GenerateSteps()
+    {
+        var automata = new CellularAutomataCaves(size, rockProbability);
+
+        int n = 0;
+        automata.Start();
+
+        Redraw(automata.data);
+        yield return stepWait;
+
+        while (n < iterations)
+        {
+            automata.Step();
+            Redraw(automata.data);
+            n += 1;
+            yield return stepWait;
+        }
+
+        maze = automata.Maze;
+        generator = null;
+        btnWalk.interactable = true;
+        btnStart.interactable = true;
+    }
+
+}
