@@ -11,6 +11,7 @@ public class Cave : MonoBehaviour
     public float rockProbability;
     public int horizontalBlankingHeight;
     public int horizontalBlankingWidth;
+    public int maxIterationsForR2Cutoff;
     public GameObject rockPrefab;
     public GameObject floorPrefab;
     public Button btnStart;
@@ -118,7 +119,7 @@ public class Cave : MonoBehaviour
 
     IEnumerator GenerateSteps()
     {
-        var automata = new CellularAutomataCaves(size, rockProbability, horizontalBlankingHeight, horizontalBlankingWidth);
+        var automata = new CellularAutomataCaves(size, rockProbability, horizontalBlankingHeight, horizontalBlankingWidth, maxIterationsForR2Cutoff);
 
         int n = 0;
         automata.Start();

@@ -7,16 +7,19 @@ public class CellularAutomataCaves
     float rockProbability;
     int horizontalBlankingHeight;
     int horizontalBlankingWidth;
+    int maxIterationsForR2Cutoff;
+    int iterations;
     public MazeSpec Maze { get; private set; }
     public bool[,] data { get; private set; }
     bool[,] newData;
 
-    public CellularAutomataCaves(Vector2Int size, float rockProbability, int horizontalBlankingHeight, int horizontalBlankingWidth)
+    public CellularAutomataCaves(Vector2Int size, float rockProbability, int horizontalBlankingHeight, int horizontalBlankingWidth, int maxIterationsForR2Cutoff)
     {
         this.size = size;
         this.rockProbability = rockProbability;
         this.horizontalBlankingHeight = horizontalBlankingHeight;
         this.horizontalBlankingWidth = horizontalBlankingWidth;
+        this.maxIterationsForR2Cutoff = maxIterationsForR2Cutoff;
     }
 
     public void Start()
@@ -46,23 +49,25 @@ public class CellularAutomataCaves
         for (var y = 1; y < size.y - 1; y++)
             for (var x = 1; x < size.x - 1; x++)
             {
-                var n = RocksAround(x, y);
-                newData[x, y] = (n >= 5);
-                if (data[x, y] && n < 2) newData[x, y] = false;
+                var n1 = RocksAround(x, y, 1);
+                var n2 = RocksAround(x, y, 2);
+                newData[x, y] = (n1 >= 5 || (iterations < maxIterationsForR2Cutoff && n2 <= 2));
             }
 
         var aux = data;
         data = newData;
         newData = aux;
+
+        iterations++;
     }
 
-    private int RocksAround(int x, int y)
+    private int RocksAround(int x, int y, int delta)
     {
         var n = 0;
         Vector2Int pos = Vector2Int.zero;
 
-        for (var dy = -1; dy <= 1; dy++)
-            for (var dx = -1; dx <= 1; dx++)
+        for (var dy = -delta; dy <= delta; dy++)
+            for (var dx = -delta; dx <= delta; dx++)
             {
                 if (dx == 0 && dy == 0)
                     continue;
