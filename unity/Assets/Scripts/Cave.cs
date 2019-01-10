@@ -90,10 +90,10 @@ public class Cave : MonoBehaviour
 
     void CreateUI()
     {
-        var pos = baseDelta + new Vector3(size.x / 2, 0, size.y / 2);
+        var pos = baseDelta + new Vector3(size.x / 2, -0.5f, size.y / 2);
         var floor = Instantiate(floorPrefab, pos, floorPrefab.transform.rotation);
-        floor.transform.localScale = new Vector3(size.x, size.y, 0);
         floor.transform.SetParent(transform, false);
+        floor.transform.localScale = new Vector3(size.x, size.y, 0);
 
         for (var y = 0; y < size.y; y++)
             for (var x = 0; x < size.x; x++)
