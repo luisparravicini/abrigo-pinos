@@ -62,13 +62,29 @@ public class Cave : MonoBehaviour
             generator = null;
         }
 
-        foreach (Transform child in transform)
-            Destroy(child.gameObject);
-
-        blocks = new GameObject[size.x, size.y];
-        floorTiles = new MeshRenderer[size.x, size.y];
         baseDelta = new Vector3(-size.x / 2 + 0.5f, 0, -size.y / 2 + 0.5f);
-        CreateUI();
+
+        if (blocks == null || size != new Vector2Int(blocks.GetLength(0), blocks.GetLength(1)))
+        {
+            foreach (Transform child in transform)
+                Destroy(child.gameObject);
+
+            blocks = new GameObject[size.x, size.y];
+            floorTiles = new MeshRenderer[size.x, size.y];
+            CreateUI();
+        }
+        else
+            ResetBlocksAndFloor();
+    }
+
+    private void ResetBlocksAndFloor()
+    {
+        for (var y = 0; y < size.y; y++)
+            for (var x = 0; x < size.x; x++)
+            {
+                blocks[x, y].SetActive(true);
+                floorTiles[x, y].material.color = floorStartColor;
+            }
     }
 
     public void Generate()
