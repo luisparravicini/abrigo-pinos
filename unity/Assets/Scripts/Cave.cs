@@ -16,14 +16,12 @@ public class Cave : MonoBehaviour
     public GameObject floorPrefab;
     public Button btnStart;
     public Button btnReset;
-    public Button btnWalk;
     public Movement walker;
     public GameObject mainCam;
     Coroutine generator;
     YieldInstruction stepWait;
     GameObject[,] blocks;
     MeshRenderer[,] floorTiles;
-    bool walking;
     Vector3 baseDelta;
     Color floorStartColor;
 
@@ -52,22 +50,6 @@ public class Cave : MonoBehaviour
         Reset();
     }
 
-    public void OnBtnWalk()
-    {
-        walking = !walking;
-
-        if (walking)
-        {
-            var delta = transform.TransformPoint(baseDelta);
-            walker.Setup(delta, new Vector2Int(size.x / 2, size.y / 2));
-        }
-        btnStart.interactable = btnReset.interactable = !walking;
-        btnWalk.GetComponentInChildren<Text>().text = (walking ? "Exit" : "Walk");
-
-        walker.gameObject.SetActive(walking);
-        mainCam.SetActive(!walking);
-    }
-
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(size.x, 1, size.y));
@@ -75,8 +57,6 @@ public class Cave : MonoBehaviour
 
     private void Reset()
     {
-        btnWalk.interactable = false;
-
         if (generator != null)
         {
             StopCoroutine(generator);
@@ -165,9 +145,7 @@ public class Cave : MonoBehaviour
         }
         #endregion
 
-
         generator = null;
-        btnWalk.interactable = true;
         btnStart.interactable = true;
     }
 
