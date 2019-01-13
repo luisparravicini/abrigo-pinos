@@ -22,12 +22,22 @@ public class Cave : MonoBehaviour
     Coroutine generator;
     YieldInstruction stepWait;
     GameObject[,] blocks;
+    MeshRenderer[,] floorTiles;
     bool walking;
     Vector3 baseDelta;
+    Color floorStartColor;
 
     private void Start()
     {
+        SetFloorColor();
         Reset();
+    }
+
+    private void SetFloorColor()
+    {
+        var floor = Instantiate(floorPrefab, Vector3.zero, Quaternion.identity);
+        floorStartColor = floor.GetComponent<MeshRenderer>().material.color;
+        Destroy(floor);
     }
 
     public void OnBtnStart()
@@ -77,6 +87,7 @@ public class Cave : MonoBehaviour
             Destroy(child.gameObject);
 
         blocks = new GameObject[size.x, size.y];
+        floorTiles = new MeshRenderer[size.x, size.y];
         baseDelta = new Vector3(-size.x / 2 + 0.5f, 0, -size.y / 2 + 0.5f);
         CreateUI();
     }
@@ -90,18 +101,20 @@ public class Cave : MonoBehaviour
 
     void CreateUI()
     {
-        var pos = baseDelta + new Vector3(size.x / 2, -0.5f, size.y / 2);
-        var floor = Instantiate(floorPrefab, pos, floorPrefab.transform.rotation);
-        floor.transform.SetParent(transform, false);
-        floor.transform.localScale = new Vector3(size.x, size.y, 0);
-
         for (var y = 0; y < size.y; y++)
             for (var x = 0; x < size.x; x++)
             {
-                pos = baseDelta + new Vector3(x, 0, y);
+                var pos = baseDelta + new Vector3(x, 0, y);
+
                 var block = Instantiate(rockPrefab, pos, rockPrefab.transform.rotation);
                 block.transform.SetParent(transform, false);
                 blocks[x, y] = block;
+
+                pos.y -= 0.5f;
+                var floor = Instantiate(floorPrefab, pos, floorPrefab.transform.rotation);
+                floor.transform.SetParent(transform, false);
+                floorTiles[x, y] = floor.GetComponent<MeshRenderer>();
+                floorTiles[x, y].material.color = floorStartColor;
             }
     }
 
@@ -114,6 +127,7 @@ public class Cave : MonoBehaviour
 
     IEnumerator GenerateSteps()
     {
+        #region Cave creation
         var automata = new CellularAutomataCaves(size, rockProbability, horizontalBlankingHeight, horizontalBlankingWidth, maxIterationsForR2Cutoff);
 
         int n = 0;
@@ -129,6 +143,28 @@ public class Cave : MonoBehaviour
             n += 1;
             yield return stepWait;
         }
+        #endregion
+
+        #region Zones detection
+        var zones = new ZonesFinder(automata.data);
+
+        zones.Find();
+        Debug.Log("Number of zones: " + zones.NumberOfZones);
+
+        var colors = new Color?[zones.NumberOfZones + 1];
+        for (var y = 0; y < size.y; y++)
+        {
+            for (var x = 0; x < size.x; x++)
+            {
+                var zoneId = zones.zones[x, y];
+                if (colors[zoneId] == null)
+                    colors[zoneId] = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+
+                floorTiles[x, y].material.color = colors[zoneId].Value;
+            }
+        }
+        #endregion
+
 
         generator = null;
         btnWalk.interactable = true;
