@@ -16,7 +16,6 @@ public class Cave : MonoBehaviour
     public GameObject floorPrefab;
     public Button btnStart;
     public Button btnReset;
-    public Movement walker;
     public GameObject mainCam;
     Coroutine generator;
     YieldInstruction stepWait;
